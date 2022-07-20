@@ -10,7 +10,7 @@ func NewCache() *cache {
 	return &cache{data: make(map[string]interface{})}
 }
 
-func (cache *cache) Set(key string, value ...interface{}) {
+func (cache *cache) Set(key string, value interface{}) {
 	cache.data[key] = value
 }
 
