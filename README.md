@@ -20,12 +20,18 @@ import (
 
 func main() {
 	cache := FirstCache.NewCache()
-	cache.Set("key", "value")
-	value, ok := cache.Get("key")
-	fmt.Println(value, ok) // [my_first_cache], <nil>
 
-	value2, ok := cache.Get("nokey")
-	fmt.Println(value2, ok) // <nil>, key doesnt exist
+	cache.Set("keykey", "valuetop1")
+	fmt.Println(cache) // &{map[keykey:[valuetop1]]}
+
+	value, ok := cache.Get("keykey")
+	fmt.Println(value, ok) // [my_first_cache] <nil>
+
+	value, ok = cache.Get("nokey")
+	fmt.Println(value, ok) // <nil> key doesnt exist
+
+	cache.Delete("keykey")
+	value, ok = cache.Get("keykey")
+	fmt.Println(value, ok) // [my_first_cache] <nil>
 }
-
 ```
