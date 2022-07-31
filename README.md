@@ -1,6 +1,5 @@
-Go in-memory cache
+Go in-memory cache with ttl
 ================================
-Go Scheduler helps you to manage functions that should be executed every N seconds/minutes/hours etc.
 
 See it in action:
 
@@ -8,7 +7,7 @@ to install module:
 
     go get -u github.com/Arkosh744/FirstCache
 
-## Example #1
+## Example
 
 ```go
 package main
@@ -19,19 +18,23 @@ import (
 )
 
 func main() {
-	cache := FirstCache.NewCache()
+	cache := NewCache()
 
-	cache.Set("keykey", "valuetop1")
-	fmt.Println(cache) // &{map[keykey:[valuetop1]]}
+	cache.Set("userId", 42, time.Second*5)
+	userId, err := cache.Get("userId")
+	if err != nil { // err == nil
+		log.Fatal(err)
+	}
+	fmt.Println(userId.Value) // Output: 42
 
-	value, ok := cache.Get("keykey")
-	fmt.Println(value, ok) // [my_first_cache] <nil>
-
-	value, ok = cache.Get("nokey")
-	fmt.Println(value, ok) // <nil> key doesnt exist
-
-	cache.Delete("keykey")
-	value, ok = cache.Get("keykey")
-	fmt.Println(value, ok) // [my_first_cache] <nil>
+	//err = cache.Delete("userId")
+	if err != nil {
+		return
+	}
+	time.Sleep(time.Second * 6) // прошло 5 секунд
+	userId, err = cache.Get("userId")
+	if err != nil { // err != nil
+		log.Fatal(err) // сработает этот код
+	}
 }
 ```
