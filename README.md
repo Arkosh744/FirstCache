@@ -19,22 +19,24 @@ import (
 
 func main() {
 	cache := NewCache()
+	ctx := context.Background()
 
-	cache.Set("userId", 42, time.Second*5)
+	cache.Set("userId", 42, time.Second*5, ctx)
 	userId, err := cache.Get("userId")
 	if err != nil { // err == nil
 		log.Fatal(err)
 	}
-	fmt.Println(userId.Value) // Output: 42
+	log.Println(userId.Value) // Output: 42
 
-	//err = cache.Delete("userId")
+	err = cache.Delete("userId")
 	if err != nil {
 		return
 	}
-	time.Sleep(time.Second * 6) // прошло 5 секунд
+	time.Sleep(time.Second * 6) // прошло 6 секунд
 	userId, err = cache.Get("userId")
 	if err != nil { // err != nil
 		log.Fatal(err) // сработает этот код
 	}
+
 }
 ```

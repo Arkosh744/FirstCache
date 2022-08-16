@@ -1,9 +1,8 @@
-package main
+package FirstCache
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -12,7 +11,6 @@ import (
 type cache struct {
 	data map[string]Value
 	mu   sync.RWMutex
-	ctx  context.Context
 }
 
 type Value struct {
@@ -21,15 +19,15 @@ type Value struct {
 }
 
 func NewCache() *cache {
-	return &cache{data: make(map[string]Value), ctx: context.Background()}
+	return &cache{data: make(map[string]Value)}
 }
 
-func (cache *cache) Set(key string, value any, ttl time.Duration) {
+func (cache *cache) Set(key string, value any, ttl time.Duration, ctx context.Context) {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
 	cache.data[key] = Value{value, ttl}
 
-	go cache.killElement(cache.ctx, key)
+	go cache.killElement(ctx, key)
 }
 
 func (cache *cache) Get(key string) (Value, error) {
@@ -67,33 +65,11 @@ func (cache *cache) killElement(ctx context.Context, key string) {
 	case <-time.After(value.ttl):
 		err := cache.Delete(key)
 		if err == nil {
-			fmt.Println("ttl timeout AFTER for ", value)
+			log.Println("ttl timeout AFTER for value ", value)
 			return
 		}
-		fmt.Println(err)
+		log.Println(err)
 		return
-	}
-
-}
-
-func main() {
-	cache := NewCache()
-
-	cache.Set("userId", 42, time.Second*5)
-	userId, err := cache.Get("userId")
-	if err != nil { // err == nil
-		log.Fatal(err)
-	}
-	fmt.Println(userId.Value) // Output: 42
-
-	//err = cache.Delete("userId")
-	if err != nil {
-		return
-	}
-	time.Sleep(time.Second * 6) // прошло 5 секунд
-	userId, err = cache.Get("userId")
-	if err != nil { // err != nil
-		log.Fatal(err) // сработает этот код
 	}
 
 }
