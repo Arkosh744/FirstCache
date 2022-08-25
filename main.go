@@ -8,29 +8,29 @@ import (
 	"time"
 )
 
-type Cache struct {
+type cache struct {
 	data map[string]Value
 	mu   sync.RWMutex
-	ttl  time.Duration
 }
 
 type Value struct {
 	Value any
+	ttl   time.Duration
 }
 
-func NewCache() *Cache {
-	return &Cache{data: make(map[string]Value)}
+func NewCache() *cache {
+	return &cache{data: make(map[string]Value)}
 }
 
-func (cache *Cache) Set(key string, value any, ctx context.Context) {
+func (cache *cache) Set(key string, value any, ttl time.Duration, ctx context.Context) {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-	cache.data[key] = Value{value}
+	cache.data[key] = Value{value, ttl}
 
 	go cache.killElement(ctx, key)
 }
 
-func (cache *Cache) Get(key string) (Value, error) {
+func (cache *cache) Get(key string) (Value, error) {
 	cache.mu.RLock()
 	defer cache.mu.RUnlock()
 
@@ -41,7 +41,7 @@ func (cache *Cache) Get(key string) (Value, error) {
 	return value, nil
 }
 
-func (cache *Cache) Delete(key string) error {
+func (cache *cache) Delete(key string) error {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
 
@@ -53,16 +53,16 @@ func (cache *Cache) Delete(key string) error {
 	return errors.New("Cannot delete key - key doesnt exist")
 }
 
-func (cache *Cache) killElement(ctx context.Context, key string) {
+func (cache *cache) killElement(ctx context.Context, key string) {
 	value, _ := cache.Get(key)
 
-	ctx, _ = context.WithTimeout(ctx, cache.ttl)
+	ctx, _ = context.WithTimeout(ctx, value.ttl)
 
 	select {
 	case <-ctx.Done():
 		return
 
-	case <-time.After(cache.ttl):
+	case <-time.After(value.ttl):
 		err := cache.Delete(key)
 		if err == nil {
 			log.Println("ttl timeout AFTER for value ", value)
